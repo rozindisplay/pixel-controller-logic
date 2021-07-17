@@ -1,7 +1,7 @@
 #include "MotorController.h"
-#include <confg/Config.h>
+#include <err/Errors.h>
 
-MotorController::MotorController(StepperMotor* stepper): stepper(stepper) {
+MotorController::MotorController(StepperMotor *stepper, LimitSwitch *limit): stepper(stepper), limit(limit) {
 	// init controller
 }
 
@@ -34,8 +34,15 @@ int MotorController::getUpperLimit() {
 }
 
 void MotorController::setSteps(int position) {
+	if(MOTOR_CONTROLLER_STATE_HOME == state) {
+		// error: cannot start the move process while in the home process
+		ERR.error(ERR_HOMING_IN_PROGRESS);
+		return;
+	}
+	
 	if(position>upperLimit || position<lowerLimit) {
-		// Error. Position set out of boundaries
+		// error. Position set out of boundaries
+		ERR.error(ERR_SET_OUT_OF_BOUNDS);
 		return;
 	}
 
@@ -44,7 +51,7 @@ void MotorController::setSteps(int position) {
 	targetPosition = position;
 	int steps = targetPosition - currentPosition;
 
-	stepper->setSpeed(StepperMotor::MAX_RPM);
+	stepper->setSpeed(MAX_RPM);
 	stepper->move(steps);
 }
 
@@ -73,50 +80,23 @@ void MotorController::addAngle(double degrees) {
 	addSteps(stepsToAdd);
 }
 
-bool MotorController::_home() {
+void MotorController::home(AsyncCallback *callback) {
+	int homeId = MOTOR_CONTROLLER_STATE_HOME/10;
+	int stateId = state/10;
+	if(homeId == stateId) {
+		// error: cannot start the home process while in the home process
+		ERR.error(ERR_HOMING_IN_PROGRESS);
+		callback->onComplete(false);
+		return;
+	}
+	
+	state = MOTOR_CONTROLLER_STATE_HOME_TO_LIMIT;
+
 	stepper->stop();
-	stepper->setSpeed(StepperMotor::MIN_RPM);
+	stepper->setSpeed(MIN_RPM);
 	stepper->move(STEPS_PER_REVOLUTION);
-	delay(1);
-
-	// search for limit switch
-	while(!LIMMIT_SWITCH.isTriggered()) {
-		if(!stepper->isMoving()) {
-			return false;
-		}
-		stepper->run();
-		delay(1);
-	}
-
-	// stop the stepper and prepare to move back to the zero position
-	stepper->stop();
-	stepper->setSpeed(StepperMotor::MIN_RPM);
-	stepper->move(-STEPS_PER_REVOLUTION);
-	delay(500);
-
-	// find the upper limit position
-	while(LIMMIT_SWITCH.isTriggered()) {
-		if(!stepper->isMoving()) {
-			return false;
-		}
-		stepper->run();
-		delay(1);
-	}
-
-	// uppper limit position found
-	targetPosition = upperLimit;
-	currentPosition = upperLimit;
 	
-	stepper->stop();
-	
-	// move to zero
-	setSteps(0);
-	while(MOTOR_CONTROLLER_STATE_MOVE == state) {
-		run();
-		delay(1);
-	}
-
-	return MOTOR_CONTROLLER_STATE_IDLE==state;
+	this->callback = callback;
 }
 
 void MotorController::run() {
@@ -126,6 +106,16 @@ void MotorController::run() {
 		break;
 	case MOTOR_CONTROLLER_STATE_MOVE:
 		this->runMove();
+		break;
+	case MOTOR_CONTROLLER_STATE_HOME_TO_LIMIT:
+		this->runHome_toLimit();
+		break;
+	case MOTOR_CONTROLLER_STATE_HOME_OFF_LIMIT:
+		this->runHome_offLimit();
+		break;
+	default:
+		// error: unknown state
+		ERR.error(ERR_CONTROLLER_STATE_UNKNOWN);
 		break;
 	}
 }
@@ -154,9 +144,61 @@ void MotorController::runMove() {
 	}
 }
 
+void MotorController::runHome_toLimit() {
+	if(!limit->isTriggered()) {
+		// moving to find limit
+
+		if(stepper->isMoving()) {
+			// keep running the stepper
+			stepper->run();
+		} else {
+			// error: we've failed to find the limit switch. the stepper moved the given number of steps
+			ERR.error(ERR_LIMIT_NOT_FOUND);
+			state = MOTOR_CONTROLLER_STATE_IDLE;
+			callback->onComplete(false);
+		}
+	} else {
+		// limit switch found
+		// stop the stepper and prepare to move back off of the limit switch
+		stepper->stop();
+		stepper->setSpeed(MIN_RPM);
+		stepper->move(-STEPS_PER_REVOLUTION);
+		state = MOTOR_CONTROLLER_STATE_HOME_OFF_LIMIT;
+	}
+}
+
+void MotorController::runHome_offLimit() {
+	if(limit->isTriggered()) {
+		// moving off of the limit switch
+
+		if(stepper->isMoving()) {
+			// keep running the stepper
+			stepper->run();
+		} else {
+			// error: we've failed to move off the limit switch. the stepper moved through the defined number of steps
+			ERR.error(ERR_LIMIT_OFF_NOT_FOUND);
+			state = MOTOR_CONTROLLER_STATE_IDLE;
+			callback->onComplete(false);
+		}
+	} else {
+		// we're off of the limit switch
+		stepper->stop();
+
+		// set position
+		targetPosition = upperLimit;
+		currentPosition = upperLimit;
+
+		// calibration is done. Move to the zero position and notify the callback
+		state = MOTOR_CONTROLLER_STATE_IDLE;
+		setSteps(0);
+		callback->onComplete(true);
+	}
+}
+
 void MotorController::checkBoundaries() {
-	if(currentPosition>upperLimit || currentPosition<lowerLimit || LIMMIT_SWITCH.isTriggered()) {		
+	if(currentPosition>upperLimit || currentPosition<lowerLimit || limit->isTriggered()) {		
 		// Error, motor moved out of bounds
+		ERR.error(ERR_MOVED_OUT_OF_BOUNDS);
 		stepper->stop();
 		return;
 	}

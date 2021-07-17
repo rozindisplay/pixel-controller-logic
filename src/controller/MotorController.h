@@ -3,16 +3,31 @@
 
 #include <hardware/limit/LimitSwitch.h>
 #include <hardware/stepper/StepperMotor.h>
-#include <looper/Loopable.h>
 
-#define MOTOR_CONTROLLER_STATE_IDLE 1
-#define MOTOR_CONTROLLER_STATE_MOVE 2
+// --== Idel: No operation is being performed ==-- //
+#define MOTOR_CONTROLLER_STATE_IDLE            00
 
-class MotorController: public Loopable {
+// --== Moving: The motor position is being updated ==-- //
+#define MOTOR_CONTROLLER_STATE_MOVE            10
+
+// --== Homing: Calibrating the motor's position ==-- //
+#define MOTOR_CONTROLLER_STATE_HOME            20
+// - looking for the limit switch
+#define MOTOR_CONTROLLER_STATE_HOME_TO_LIMIT   21
+// - backing off the limit switch
+#define MOTOR_CONTROLLER_STATE_HOME_OFF_LIMIT  22
+
+class AsyncCallback {
 public:
-	MotorController(StepperMotor*);
+	virtual void onComplete(bool) = 0;
+};
+
+class MotorController {
+public:
+	MotorController(StepperMotor*, LimitSwitch*);
 	void run();
-	bool _home();
+	
+	void home(AsyncCallback*);
 	void setLowerLimit(int lower);
 	int getLowerLimit();
 	void setUpperLimit(int lower);
@@ -25,14 +40,19 @@ public:
 	double getCurrentAngle();
 	void setAngle(double degrees);
 	void addAngle(double degrees);
-
 private:
 
 	void runIdel();
 	void runMove();
+	void runHome_toLimit();
+	void runHome_offLimit();
+	
 	void checkBoundaries();
 
 	StepperMotor *stepper;
+	LimitSwitch *limit;
+
+	AsyncCallback* callback;
 
 	int currentPosition;
 	int targetPosition;

@@ -41,7 +41,7 @@ int StepperMotor::getRemainingSteps() {
 ;
 
 void StepperMotor::setSpeed(int rpm) {
-	this->delay = 60L * 1000L * 1000L / StepperMotor::STEPS_PER_REVOLUTION / rpm;
+	this->delay = 60L * 1000L * 1000L / STEPS_PER_REVOLUTION / rpm;
 }
 ;
 
@@ -71,10 +71,10 @@ void StepperMotor::run() {
 	lastStepTime = now;
 	step = step + direction;
 
-	if (step > 7) {
+	if (step > 3) {
 		step = 0;
 	} else if (step < 0) {
-		step = 7;
+		step = 3;
 	}
 
 	// positive directions are counter-clockwise
@@ -85,46 +85,22 @@ void StepperMotor::run() {
 		digitalWrite(pins->pin3, HIGH);
 		digitalWrite(pins->pin4, LOW);
 		break;
-	case 1: // 0111
-		digitalWrite(pins->pin1, LOW);
-		digitalWrite(pins->pin2, HIGH);
-		digitalWrite(pins->pin3, HIGH);
-		digitalWrite(pins->pin4, HIGH);
-		break;
-	case 2: //  0011
+	case 1: //  0011
 		digitalWrite(pins->pin1, LOW);
 		digitalWrite(pins->pin2, LOW);
 		digitalWrite(pins->pin3, HIGH);
 		digitalWrite(pins->pin4, HIGH);
 		break;
-	case 3: // 1011
-		digitalWrite(pins->pin1, HIGH);
-		digitalWrite(pins->pin2, LOW);
-		digitalWrite(pins->pin3, HIGH);
-		digitalWrite(pins->pin4, HIGH);
-		break;
-	case 4: // 1001
+	case 2: // 1001
 		digitalWrite(pins->pin1, HIGH);
 		digitalWrite(pins->pin2, LOW);
 		digitalWrite(pins->pin3, LOW);
 		digitalWrite(pins->pin4, HIGH);
 		break;
-	case 5: // 1101
+	case 3: // 1100
 		digitalWrite(pins->pin1, HIGH);
 		digitalWrite(pins->pin2, HIGH);
 		digitalWrite(pins->pin3, LOW);
-		digitalWrite(pins->pin4, HIGH);
-		break;
-	case 6: // 1100
-		digitalWrite(pins->pin1, HIGH);
-		digitalWrite(pins->pin2, HIGH);
-		digitalWrite(pins->pin3, LOW);
-		digitalWrite(pins->pin4, LOW);
-		break;
-	case 7: // 1110
-		digitalWrite(pins->pin1, HIGH);
-		digitalWrite(pins->pin2, HIGH);
-		digitalWrite(pins->pin3, HIGH);
 		digitalWrite(pins->pin4, LOW);
 		break;
 	}

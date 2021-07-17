@@ -1,0 +1,33 @@
+#ifndef PIXEL_CONTROLLER_CONSTS
+#define PIXEL_CONTROLLER_CONSTS
+
+#ifndef I2C_ADDRESS
+#define I2C_ADDRESS 8
+#endif
+
+#define DIGITAL_PD0 0
+#define DIGITAL_PD1 1
+#define DIGITAL_PD2 2
+#define DIGITAL_PD3 3
+#define DIGITAL_PD4 4
+#define DIGITAL_PD5 5
+#define DIGITAL_PD6 6
+#define DIGITAL_PD7 7
+#define DIGITAL_PB0 8
+#define DIGITAL_PB1 9
+#define DIGITAL_PB2 10
+#define DIGITAL_PB3 11
+#define DIGITAL_PB4 12
+#define DIGITAL_PB5 13
+#define DIGITAL_PC0 14
+#define DIGITAL_PC1 15
+#define DIGITAL_PC2 16
+#define DIGITAL_PC3 17
+#define DIGITAL_PC4 18
+#define DIGITAL_PC5 19
+
+#define LIMMIT_SWITCH_PIN DIGITAL_PD1
+
+#define PIXEL_COUNT 4
+
+#endif
