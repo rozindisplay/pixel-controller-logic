@@ -13,7 +13,7 @@ MotorController CONTROLLER_1 = MotorController(&STEPPER_MOTOR_1, &LIMMIT_SWITCH)
 MotorController CONTROLLER_2 = MotorController(&STEPPER_MOTOR_2, &LIMMIT_SWITCH);
 MotorController CONTROLLER_3 = MotorController(&STEPPER_MOTOR_3, &LIMMIT_SWITCH);
 
-PixelClientReader CLIENT_READER = PixelClientReader();
+PixReader CLIENT_READER = PixReader();
 
 const StepperMotorPins* getStepperMotorPins(char index) {
     if(index<0 || index>=PIXEL_COUNT) {

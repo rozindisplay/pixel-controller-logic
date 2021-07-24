@@ -40,6 +40,7 @@ public:
 	double getCurrentAngle();
 	void setAngle(double degrees);
 	void addAngle(double degrees);
+	bool isMoving();
 private:
 
 	void runIdel();

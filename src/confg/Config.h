@@ -2,7 +2,7 @@
 #define PIXEL_CONTROLLER_CONFIG_CONFIG
 
 #include "Consts.h"
-#include "PixelClientReader.h"
+#include <pix/PixReader.h>
 #include <hardware/limit/LimitSwitch.h>
 #include <hardware/stepper/StepperMotor.h>
 #include <controller/MotorController.h>
@@ -25,7 +25,7 @@ extern MotorController CONTROLLER_1;
 extern MotorController CONTROLLER_2;
 extern MotorController CONTROLLER_3;
 
-extern PixelClientReader CLIENT_READER;
+extern PixReader CLIENT_READER;
 
 const StepperMotorPins* getStepperMotorPins(char index);
 StepperMotor* getStepperMotor(char index);

@@ -13,4 +13,8 @@ int Errors::reset() {
     return code;
 }
 
+int Errors::getCode() {
+    return code;
+}
+
 Errors ERR = Errors();

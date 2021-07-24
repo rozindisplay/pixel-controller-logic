@@ -7,13 +7,16 @@
 CmdProcessor processor = CmdProcessor();
 
 static void receive(int bytes) {
+	int err;
 	while(CLIENT_READER.hasNext()) {
-		CLIENT_READER.next(&processor);
+		err = CLIENT_READER.next(&processor);
+		if(err!=0) ERR.error(err);
 	}
 }
 
 static void request() {
-	CLIENT_READER.nextRequest(&processor);
+	int err = CLIENT_READER.nextRequest(&processor);
+	if(err!=0) ERR.error(err);
 }
 
 void setup() {

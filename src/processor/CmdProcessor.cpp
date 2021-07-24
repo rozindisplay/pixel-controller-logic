@@ -2,13 +2,8 @@
 #include "Wire.h"
 #include <controller/MotorController.h>
 #include <confg/Config.h>
-#include <utils/StreamUtils.h>
 
-void CmdProcessor::onHome(unsigned char opcode) {
-    homeProcessor.home();
-}
-
-void CmdProcessor::onSetLimitsAndHome(unsigned char opcode, const PixelClientLimit& limitP1, const PixelClientLimit& limitP2, const PixelClientLimit& limitP3, const PixelClientLimit& limitP4) {
+void CmdProcessor::onInit(const PixLimit& limitP1, const PixLimit& limitP2, const PixLimit& limitP3, const PixLimit& limitP4) {
     MotorController* motorController = NULL;
     
     motorController = getMotorController(1);
@@ -30,42 +25,70 @@ void CmdProcessor::onSetLimitsAndHome(unsigned char opcode, const PixelClientLim
     homeProcessor.home();
 }
 
-void CmdProcessor::onSetLimit(unsigned char opcode, unsigned char pixel, const PixelClientLimit& limit) {
+void CmdProcessor::onHome() {
+    homeProcessor.home();
+}
+
+void CmdProcessor::onClearErrorCode() {
+    ERR.reset();
+}
+
+void CmdProcessor::onSetLimit(unsigned char pixel, const PixLimit& limit) {
     MotorController* motorController = getMotorController(pixel);
     motorController->setUpperLimit(limit.upper);
     motorController->setLowerLimit(limit.lower);
 }
 
-void CmdProcessor::onSetSteps(unsigned char opcode, unsigned char pixel, int steps) {
+void CmdProcessor::onSetSteps(unsigned char pixel, int steps) {
     MotorController* motorController = getMotorController(pixel);
     motorController->setSteps(steps);
 }
 
-void CmdProcessor::onAddSteps(unsigned char opcode, unsigned char pixel, int steps) {
+void CmdProcessor::onAddSteps(unsigned char pixel, int steps) {
     MotorController* motorController = getMotorController(pixel);
     motorController->addSteps(steps);
 }
 
-void CmdProcessor::onSetAngle(unsigned char opcode, char unsigned pixel, double angle) {
+void CmdProcessor::onSetAngle(char unsigned pixel, double angle) {
     MotorController* motorController = getMotorController(pixel);
     motorController->setAngle(angle);
 }
 
-void CmdProcessor::onAddAngle(unsigned char opcode, unsigned char pixel, double angle) {
+void CmdProcessor::onAddAngle(unsigned char pixel, double angle) {
     MotorController* motorController = getMotorController(pixel);
     motorController->addAngle(angle);
-}
-
-void CmdProcessor::onSetRequestType(unsigned char opcode, unsigned char requestType) {
-    // nop
 }
 
 void CmdProcessor::requestPing() {
     // nop
 }
 
-int CmdProcessor::requestError() {
-    return ERR.reset();
+int CmdProcessor::requestErrorCode() {
+    return ERR.getCode();
+}
+
+unsigned char CmdProcessor::requestMovingCount() {
+    int count = 0;
+    
+    for(int i=0; i<PIXEL_COUNT; i++) {
+        if(getMotorController(i)->isMoving()) {
+            count++;
+        }
+    }
+
+    return count;
+}
+const PixStatus CmdProcessor::requestStatus(unsigned char pixle) {
+    MotorController* motorController = getMotorController(pixle);
+
+    bool moving = motorController->isMoving();
+    int target = motorController->getSteps();
+    int steps = motorController->getCurrentSteps();
+    double angle = motorController->getCurrentAngle();
+    int lowerLimit = motorController->getLowerLimit();
+    int upperLimit = motorController->getUpperLimit();
+    
+    return PixStatus(moving, target, steps, angle, PixLimit(lowerLimit, upperLimit));
 }
 
 void HomeCmdProcessor::home() {

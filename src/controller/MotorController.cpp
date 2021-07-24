@@ -5,6 +5,10 @@ MotorController::MotorController(StepperMotor *stepper, LimitSwitch *limit): ste
 	// init controller
 }
 
+bool MotorController::isMoving() {
+	return stepper->isMoving();
+}
+
 int MotorController::getSteps() {
 	return this->targetPosition;
 }

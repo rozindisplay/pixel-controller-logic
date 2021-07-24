@@ -16,8 +16,9 @@ public:
     Errors();
     void error(int code);
     int reset();
+    int getCode();
 private:
-    int code;
+    int code = ERR_NONE;
 };
 
 extern Errors ERR;

@@ -2,8 +2,8 @@
 #define PIXEL_PROCESSOR
 
 #include "Stream.h"
-#include "PixelClientLimit.h"
-#include "PixelClientProcessor.h"
+#include <pix/PixModel.h>
+#include <pix/PixProcessor.h>
 #include <controller/MotorController.h>
 
 class HomeCmdProcessor: public AsyncCallback {
@@ -15,20 +15,22 @@ private:
     void runNext();
 };
 
-class CmdProcessor: public PixelClientProcessor {
+class CmdProcessor: public PixProcessor {
 public:
-    void onHome(unsigned char opcode);
-    void onSetLimitsAndHome(unsigned char opcode, const PixelClientLimit& limitP1, const PixelClientLimit& limitP2, const PixelClientLimit& limitP3, const PixelClientLimit& limitP4);
-    void onSetLimit(unsigned char opcode, unsigned char pixle, const PixelClientLimit& limit);
-    void onSetSteps(unsigned char opcode, unsigned char pixle, int steps);
-    void onAddSteps(unsigned char opcode, unsigned char pixle, int steps);
-    void onSetAngle(unsigned char opcode, unsigned char pixle, double angle);
-    void onAddAngle(unsigned char opcode, unsigned char pixle, double angle);
-    void onSetRequestType(unsigned char opcode, unsigned char requestType);
+    void onInit(const PixLimit& limitP1, const PixLimit& limitP2, const PixLimit& limitP3, const PixLimit& limitP4);
+    void onHome();
+    void onClearErrorCode();
+    void onSetLimit(unsigned char pixle, const PixLimit& limit);
+    void onSetSteps(unsigned char pixle, int steps);
+    void onAddSteps(unsigned char pixle, int steps);
+    void onSetAngle(unsigned char pixle, double angle);
+    void onAddAngle(unsigned char pixle, double angle);
     void requestPing();
-    int requestError();
+    int requestErrorCode();
+    unsigned char requestMovingCount();
+    const PixStatus requestStatus(unsigned char pixle);
 private:
-    HomeCmdProcessor homeProcessor;
+    HomeCmdProcessor homeProcessor;    
 };
 
 #endif

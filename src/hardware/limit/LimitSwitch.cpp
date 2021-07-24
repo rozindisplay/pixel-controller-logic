@@ -11,3 +11,5 @@ bool LimitSwitch::isTriggered() {
 uint8_t LimitSwitch::getPin() {
 	return this->pin;
 };
+ 
+ 
