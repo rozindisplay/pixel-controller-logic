@@ -55,7 +55,7 @@ StepperMotor* getStepperMotor(char index) {
             return NULL;
     }
 }
-MotorController* getMotorController(char index) {
+MotorController* getMotorController(unsigned char index) {
     if(index<0 || index>=PIXEL_COUNT) {
         // error: index out of bounds
         return NULL;

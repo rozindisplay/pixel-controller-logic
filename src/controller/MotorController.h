@@ -27,6 +27,7 @@ public:
 	MotorController(StepperMotor*, LimitSwitch*);
 	void run();
 	
+	void home();
 	void home(AsyncCallback*);
 	void setLowerLimit(int lower);
 	int getLowerLimit();
@@ -54,6 +55,7 @@ private:
 	LimitSwitch *limit;
 
 	AsyncCallback* callback;
+	void callCallback(bool);
 
 	int currentPosition;
 	int targetPosition;

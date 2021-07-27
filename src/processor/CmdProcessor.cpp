@@ -3,34 +3,12 @@
 #include <controller/MotorController.h>
 #include <confg/Config.h>
 
-void CmdProcessor::onInit(const PixLimit& limitP1, const PixLimit& limitP2, const PixLimit& limitP3, const PixLimit& limitP4) {
-    MotorController* motorController = NULL;
-    
-    motorController = getMotorController(1);
-    motorController->setUpperLimit(limitP1.upper);
-    motorController->setLowerLimit(limitP1.lower);
-
-    motorController = getMotorController(2);
-    motorController->setUpperLimit(limitP2.upper);
-    motorController->setLowerLimit(limitP2.lower);
-
-    motorController = getMotorController(3);
-    motorController->setUpperLimit(limitP3.upper);
-    motorController->setLowerLimit(limitP3.lower);
-
-    motorController = getMotorController(4);
-    motorController->setUpperLimit(limitP4.upper);
-    motorController->setLowerLimit(limitP4.lower);
-
-    homeProcessor.home();
-}
-
 void CmdProcessor::onHome() {
     homeProcessor.home();
 }
 
-void CmdProcessor::onClearErrorCode() {
-    ERR.reset();
+void CmdProcessor::onHome(unsigned char pixel) {
+    getMotorController(pixel)->home();
 }
 
 void CmdProcessor::onSetLimit(unsigned char pixel, const PixLimit& limit) {
@@ -63,11 +41,15 @@ void CmdProcessor::requestPing() {
     // nop
 }
 
+unsigned char CmdProcessor::requestPixels() {
+    return PIXEL_COUNT;
+}
+
 int CmdProcessor::requestErrorCode() {
     return ERR.getCode();
 }
 
-unsigned char CmdProcessor::requestMovingCount() {
+unsigned char CmdProcessor::requestMoving() {
     int count = 0;
     
     for(int i=0; i<PIXEL_COUNT; i++) {
@@ -78,6 +60,35 @@ unsigned char CmdProcessor::requestMovingCount() {
 
     return count;
 }
+
+bool CmdProcessor::requestIsMoving(unsigned char pixel) {
+    return getMotorController(pixel)->isMoving();
+}
+
+int CmdProcessor::requestTargetSteps(unsigned char pixel) {
+    return getMotorController(pixel)->getSteps();
+}
+
+int CmdProcessor::requestSteps(unsigned char pixel) {
+    return getMotorController(pixel)->getCurrentSteps();
+}
+
+double CmdProcessor::requestTargetAngle(unsigned char pixel) {
+    return getMotorController(pixel)->getAngle();
+}
+
+double CmdProcessor::requestAngle(unsigned char pixel) {
+    return getMotorController(pixel)->getCurrentAngle();
+}
+
+const PixLimit CmdProcessor::requestLimit(unsigned char pixel) {
+    MotorController* motorController = getMotorController(pixel);
+    int lowerLimit = motorController->getLowerLimit();
+    int upperLimit = motorController->getUpperLimit();
+
+    return PixLimit(lowerLimit, upperLimit);
+}
+
 const PixStatus CmdProcessor::requestStatus(unsigned char pixle) {
     MotorController* motorController = getMotorController(pixle);
 
@@ -89,6 +100,10 @@ const PixStatus CmdProcessor::requestStatus(unsigned char pixle) {
     int upperLimit = motorController->getUpperLimit();
     
     return PixStatus(moving, target, steps, angle, PixLimit(lowerLimit, upperLimit));
+}
+
+void CmdProcessor::onClearErrorCode() {
+    ERR.reset();
 }
 
 void HomeCmdProcessor::home() {

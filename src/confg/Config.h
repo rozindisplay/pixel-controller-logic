@@ -27,8 +27,8 @@ extern MotorController CONTROLLER_3;
 
 extern PixReader CLIENT_READER;
 
-const StepperMotorPins* getStepperMotorPins(char index);
-StepperMotor* getStepperMotor(char index);
-MotorController* getMotorController(char index);
+const StepperMotorPins* getStepperMotorPins(unsigned char index);
+StepperMotor* getStepperMotor(unsigned char index);
+MotorController* getMotorController(unsigned char index);
 
 #endif

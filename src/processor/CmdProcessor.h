@@ -10,25 +10,33 @@ class HomeCmdProcessor: public AsyncCallback {
 public:
     void home();
 private:
-    char pixel = -1;
+    int pixel = -1;
     void onComplete(bool);
     void runNext();
 };
 
 class CmdProcessor: public PixProcessor {
 public:
-    void onInit(const PixLimit& limitP1, const PixLimit& limitP2, const PixLimit& limitP3, const PixLimit& limitP4);
+    
     void onHome();
+    void onHome(unsigned char pixel);
+    void onSetLimit(unsigned char pixel, const PixLimit& limit);
+    void onSetSteps(unsigned char pixel, int steps);
+    void onAddSteps(unsigned char pixel, int steps);
+    void onSetAngle(unsigned char pixel, double angle);
+    void onAddAngle(unsigned char pixel, double angle);
     void onClearErrorCode();
-    void onSetLimit(unsigned char pixle, const PixLimit& limit);
-    void onSetSteps(unsigned char pixle, int steps);
-    void onAddSteps(unsigned char pixle, int steps);
-    void onSetAngle(unsigned char pixle, double angle);
-    void onAddAngle(unsigned char pixle, double angle);
     void requestPing();
+    unsigned char requestPixels();
+    unsigned char requestMoving();
+    bool requestIsMoving(unsigned char pixel);
+    int requestTargetSteps(unsigned char pixel);
+    int requestSteps(unsigned char pixel);
+    double requestTargetAngle(unsigned char pixel);
+    double requestAngle(unsigned char pixel);
+    const PixLimit requestLimit(unsigned char pixel);
+    const PixStatus requestStatus(unsigned char pixel);
     int requestErrorCode();
-    unsigned char requestMovingCount();
-    const PixStatus requestStatus(unsigned char pixle);
 private:
     HomeCmdProcessor homeProcessor;    
 };

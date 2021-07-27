@@ -84,13 +84,20 @@ void MotorController::addAngle(double degrees) {
 	addSteps(stepsToAdd);
 }
 
+void MotorController::home() {
+	home(NULL);
+}
+
 void MotorController::home(AsyncCallback *callback) {
 	int homeId = MOTOR_CONTROLLER_STATE_HOME/10;
 	int stateId = state/10;
 	if(homeId == stateId) {
 		// error: cannot start the home process while in the home process
 		ERR.error(ERR_HOMING_IN_PROGRESS);
-		callback->onComplete(false);
+
+		if(NULL != callback) {
+			callback->onComplete(false);
+		}
 		return;
 	}
 	
@@ -159,7 +166,7 @@ void MotorController::runHome_toLimit() {
 			// error: we've failed to find the limit switch. the stepper moved the given number of steps
 			ERR.error(ERR_LIMIT_NOT_FOUND);
 			state = MOTOR_CONTROLLER_STATE_IDLE;
-			callback->onComplete(false);
+			callCallback(false);
 		}
 	} else {
 		// limit switch found
@@ -182,7 +189,7 @@ void MotorController::runHome_offLimit() {
 			// error: we've failed to move off the limit switch. the stepper moved through the defined number of steps
 			ERR.error(ERR_LIMIT_OFF_NOT_FOUND);
 			state = MOTOR_CONTROLLER_STATE_IDLE;
-			callback->onComplete(false);
+			callCallback(false);
 		}
 	} else {
 		// we're off of the limit switch
@@ -195,7 +202,7 @@ void MotorController::runHome_offLimit() {
 		// calibration is done. Move to the zero position and notify the callback
 		state = MOTOR_CONTROLLER_STATE_IDLE;
 		setSteps(0);
-		callback->onComplete(true);
+		callCallback(true);
 	}
 }
 
@@ -206,4 +213,11 @@ void MotorController::checkBoundaries() {
 		stepper->stop();
 		return;
 	}
+}
+
+void MotorController::callCallback(bool successful) {
+	if(NULL!=callback) {
+		callback->onComplete(successful);
+	}
+	this->callback = NULL;
 }
